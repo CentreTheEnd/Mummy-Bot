@@ -14,6 +14,9 @@ import pkg from '@whiskeysockets/baileys'
 
 import './config.js'
 
+import { database, loadDatabase } from './src/lib/database.js'
+import { makeWASocket, protoType, serialize } from './src/lib/simple.js'
+
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
 return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString()
 }
@@ -29,6 +32,9 @@ global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse()
 global.timestamp = {
 start: new Date()
 }
+
+global.db = database 
+global.loadDatabase = loadDatabase
 
 const { 
   DisconnectReason, 
@@ -57,6 +63,9 @@ resolve(answer.trim())
 })
 })
 }
+
+protoType()
+serialize()
 
 function verificationAuthFolder() {
   if (!fs.existsSync(authFolder)) {
@@ -160,7 +169,7 @@ isInit = false
 return true
 }
 
-const pluginFolder = global.__dirname(join(__dirname, './plugins/index'))
+const pluginFolder = global.__dirname(join(__dirname, './src/plugins/index'))
 const pluginFilter = filename => /\.js$/.test(filename)
 global.plugins = {}
 async function filesInit() {
@@ -180,12 +189,12 @@ global.reload = async (_ev, filename) => {
 if (pluginFilter(filename)) {
 let dir = global.__filename(join(pluginFolder, filename), true)
 if (filename in global.plugins) {
-if (existsSync(dir)) conn.logger.info(`🍃 Memuat ulang plugin '${filename}'`)
+if (existsSync(dir)) conn.logger.info(`Memuat ulang plugin '${filename}'`)
 else {
-conn.logger.warn(`⚠️ Plugin '${filename}' telah dihapus`)
+conn.logger.warn(`Plugin '${filename}' telah dihapus`)
 return delete global.plugins[filename]
 }
-} else conn.logger.info(`📢 Memuat plugin baru: '${filename}'`)
+} else conn.logger.info(`Memuat plugin baru: '${filename}'`)
 let err = syntaxerror(readFileSync(dir), filename, {
 sourceType: 'module',
 allowAwaitOutsideFunction: true
